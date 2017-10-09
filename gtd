@@ -1,0 +1,394 @@
+#!/bin/bash
+
+##################################
+## Lowbit GTD® by Task Warrior© ##
+##################################
+
+##########
+# Config #
+##########
+
+# [System]
+gtdBannerString="Lowbit Inspector"
+gtdRefreshInterval=60
+gtdTaskExec="task rc.verbose=nothing"
+# [Capture]
+gtdCaptureTerminatorString="done"
+# [Clarify]
+gtdClarifyContexts="home business work"
+gtdClarifyCategories="Business Career Family Finances Health Hobbies Love Social Spiritual Work"
+gtdClarifySomedayListTerminator="done"
+gtdClarifyNothingString="Nothing to clarify. Be happy. =)"
+# [Organize]
+# [Reflect]
+# [Engage]
+gtdEngageTodayTitle="Vencem Hoje"
+gtdEngageTodayAmount=5
+gtdEngageOverdueTitle="Atrasadas"
+gtdEngageOverdueAmount=3
+gtdEngageReadyTitle="Próximas Ações"
+gtdEngageReadyAmount=3
+gtdEngageWeekTitle="Para essa Semana"
+gtdEngageWeekAmount=2
+gtdEngageMonthTitle="Ainda esse Mês"
+gtdEngageMonthAmount=2
+gtdEngageYearTitle="Até o fim do Ano"
+gtdEngageYearAmount=2
+
+#_______________________Do_not_cross_this_line_(kidding)_______________________#
+
+#############
+# Functions #
+#############
+
+# Shows the screen banner
+function gtdBanner() {
+  gtdMode=$1
+
+  clear
+  echo "--------------------------------------------------------------------------------"
+  echo " You are in ${gtdBannerString} | '${gtdMode}' mode"
+  echo "--------------------------------------------------------------------------------"
+  echo
+}
+
+# GTD Phase #1 - Capture: Capturing ideas to be processed later
+function gtdCapture() {
+  gtdBanner "Capture"
+
+  # Cleaning the context before start, so tasks won't get any tags
+  ${gtdTaskExec} context none
+
+  # Letting the user input its 'tasks' to the Inbox of Task Warrior
+  echo "Type the things you need to capture (when you're done, type '${gtdCaptureTerminatorString}') "
+  while [ "${usrCaptureString}" != "${gtdCaptureTerminatorString}" ]; do
+
+    read -p "Capture: " usrCaptureString
+
+    case "${usrCaptureString}" in
+      "")
+        echo "Nothing? If you're done, type '${gtdCaptureTerminatorString}'"
+        ;;
+      "${gtdCaptureTerminatorString}")
+        break
+        ;;
+      *)
+        ${gtdTaskExec} add "${usrCaptureString}"
+        ;;
+    esac
+
+  done
+}
+
+# GTD Phase #2 - Clarify: Understanding the ideas previously captured
+function gtdClarify() {
+
+  gtdClarifyContextsAll="${gtdClarifyContexts} continue"
+
+  while [ `${gtdTaskExec} status:pending project: wait: count` -gt 0 ]; do
+
+    unset usrClarifyRenameWhich
+
+    gtdClarifyCount=`${gtdTaskExec} status:pending project: wait: count`
+    gtdClarifyNext=`${gtdTaskExec} oldest project: wait: limit:1 | awk '{print $1}' | head -n1`
+    gtdBanner "Clarify"
+    echo "Needing Clarify: ${gtdClarifyCount}"
+    echo
+    echo "Next: ${gtdClarifyNext}"
+    ${gtdTaskExec} "${gtdClarifyNext}" long
+    echo
+    
+    # Questions
+    echo "Options:"
+    select usrClarifyAction in "Action" "Someday" "Goal" "Habit" "Done" "Trash"; do
+      case "${usrClarifyAction}" in
+        "Action")
+
+          echo "Which Category?"
+          select usrClarifyCategory in ${gtdClarifyCategories}; do
+            task ${gtdClarifyNext} modify project:"${usrClarifyCategory}"
+            break
+          done
+
+          echo "Is it part of a Project?"
+          select usrClarifyProjectBool in "Yes" "No"; do
+            case ${usrClarifyProjectBool} in
+              "Yes")
+                echo "Available Projects:"
+                ${gtdTaskExec} project:"${usrClarifyCategory}" projects
+                echo
+
+                read -p "Which Project? " usrClarifyProjectWhich
+                if [ -n "${usrClarifyProjectWhich}" ]; then
+                  task ${gtdClarifyNext} modify project:"${usrClarifyCategory}"."${usrClarifyProjectWhich}"
+                  echo
+                fi
+
+                break
+                ;;
+              "No")
+                break
+                ;;
+            esac
+          done
+
+          echo "Do you need to rename it?"
+          select usrClarifyRenameBool in "Yes" "No"; do
+            case ${usrClarifyRenameBool} in
+              "Yes")
+                while [ -z "${usrClarifyRenameWhich}" ]; do
+                  read -p "Type the new name of the task: " usrClarifyRenameWhich
+                done
+
+                task ${gtdClarifyNext} modify description:"${usrClarifyRenameWhich}"
+
+                break
+                ;;
+              "No")
+                break
+                ;;
+            esac
+          done
+
+          echo "Which are the contexts? (select once at a time, then select 'continue')"
+          select usrClarifyContext in ${gtdClarifyContextsAll}; do
+            case "${usrClarifyContext}" in
+              "continue")
+                break
+                ;;
+              *)
+                task ${gtdClarifyNext} modify +"${usrClarifyContext}"
+                ;;
+            esac
+          done
+
+          echo "What is the Priority?"
+          select usrClarifyPriority in "High" "Medium" "Low" "None"; do
+            case ${usrClarifyPriority} in
+              "High")
+                task ${gtdClarifyNext} modify priority:H
+                break
+                ;;
+              "Medium")
+                task ${gtdClarifyNext} modify priority:M
+                break
+                ;;
+              "Low")
+                task ${gtdClarifyNext} modify priority:L
+                break
+                ;;
+              "None")
+                task ${gtdClarifyNext} modify priority:
+                break
+                ;;
+            esac
+          done
+
+          echo "Does it have a Due Date?"
+          select usrClarifyDateBool in "Yes" "No"; do
+            case ${usrClarifyDateBool} in
+              "Yes")
+                taskDateRC=1
+                while [ ${taskDateRC} -ne 0 ]; do
+
+                  read -p "Type the Due Date, or 'none' to skip: " usrClarifyDateWhich
+                    case ${usrClarifyDateWhich} in
+                      "none")
+                        task ${gtdClarifyNext} modify due:
+                        taskDateRC=$?
+                        ;;
+                      "")
+                        echo "No Due Date? If so, type 'none'"
+                        ;;
+                      *)
+                        task ${gtdClarifyNext} modify due:"${usrClarifyDateWhich}"
+                        taskDateRC=$?
+                        ;;
+                    esac
+                done
+
+                break
+                ;;
+              "No")
+                task ${gtdClarifyNext} modify due:
+                break
+                ;;
+            esac
+          done
+
+          echo "Is it recurrent?"
+          select usrClarifyRecurrenceBool in "Yes" "No"; do
+            case ${usrClarifyRecurrenceBool} in
+              "Yes")
+                taskRecurrenceRC=1
+                while [ ${taskRecurrenceRC} -ne 0 ]; do
+
+                  read -p "Type the Recurrence, or 'none' to skip: " usrClarifyRecurrenceWhich
+                    case ${usrClarifyRecurrenceWhich} in
+                      "none")
+                        task ${gtdClarifyNext} modify recur:
+                        taskRecurrenceRC=$?
+                        ;;
+                      "")
+                        echo "No Recurrence? If so, type 'none'"
+                        ;;
+                      *)
+                        task ${gtdClarifyNext} modify recur:"${usrClarifyRecurrenceWhich}"
+                        taskRecurrenceRC=$?
+                        ;;
+                    esac
+                done
+
+                break
+                ;;
+              "No")
+                task ${gtdClarifyNext} modify due:
+                break
+                ;;
+            esac
+          done
+
+          echo "Is it Urgent?"
+          select usrClarifyUrgent in "Yes" "No"; do
+            case ${usrClarifyUrgent} in
+              "Yes")
+                task ${gtdClarifyNext} modify +next
+                break
+                ;;
+              "No")
+                break
+                ;;
+            esac
+          done
+
+          echo "Can it be done in 5 Minutes or less?"
+          select usrClarify5Minutes in "Yes" "No"; do
+            case ${usrClarify5Minutes} in
+              "Yes")
+                task ${gtdClarifyNext} modify +next
+                break
+                ;;
+              "No")
+                break
+                ;;
+            esac
+          done
+
+          break
+
+          ;;
+        "Someday")
+          task ${gtdClarifyNext} modify project:Someday
+          task tags          
+
+          unset usrClarifySomedayList
+
+          while [ "${usrClarifySomedayList}" != "${gtdClarifySomedayListTerminator}" ]; do
+            echo "Which lists? (once at time - when you're done, type '${gtdClarifySomedayListTerminator}')"
+            read -p "List: " usrClarifySomedayList
+            if [ -n "${usrClarifySomedayList}" ]; then
+              task ${gtdClarifyNext} modify +"${usrClarifySomedayList}"
+            fi
+          done
+
+          break
+
+          ;;
+        "Goal")
+          echo "Soon..."
+          ;;
+        "Habit")
+          echo "Soon..."
+          ;;
+        "Done")
+          task ${gtdClarifyNext} done
+          break
+          ;;
+        "Trash")
+          task ${gtdClarifyNext} delete
+          break
+          ;;
+      esac
+    done
+
+
+
+  done
+
+  gtdBanner "Clarify"
+  echo "${gtdClarifyNothingString}"
+
+}
+
+# GTD Phase #5 - Engage: Getting Things Done
+function gtdEngage() {
+
+  while [ true ]; do
+    gtdBanner "Engage"
+    gtdQuery "${gtdEngageTodayTitle}" "next +TODAY" "${gtdEngageTodayAmount}"
+    gtdQuery "${gtdEngageOverdueTitle}" "overdue" "${gtdEngageOverdueAmount}"
+    gtdQuery "${gtdEngageReadyTitle}" "ready" "${gtdEngageReadyAmount}"
+    gtdQuery "${gtdEngageWeekTitle}" "next +WEEK" "${gtdEngageWeekAmount}"
+    gtdQuery "${gtdEngageMonthTitle}" "next +MONTH" "${gtdEngageMonthAmount}"
+    gtdQuery "${gtdEngageYearTitle}" "next +YEAR" "${gtdEngageYearAmount}"
+
+    sleep ${gtdRefreshInterval}
+  done
+}
+
+function gtdQuery() {
+  queryTitle=$1
+  queryFilter=$2
+  queryAmount=$3
+
+  if [ ${queryAmount} -le 0 ]; then
+    return
+  fi
+
+  echo "=> ${queryTitle} (${queryAmount}) <="
+  ${gtdTaskExec} ${queryFilter} limit:${queryAmount}
+  echo
+}
+
+############
+# GTD Time #
+############
+
+if [ $1 ]; then
+  usrAction=$1
+else
+  echo "Syntax:"
+  echo "  `basename $0` OPTION"
+  echo
+  echo "Options:"
+  echo "  capture"
+  echo "  clarify"
+  echo "  organize"
+  echo "  reflect"
+  echo "  engage"
+  exit 1
+fi
+
+case $usrAction in
+  "capture")  gtdCapture                        ;;
+  "clarify")  gtdClarify                        ;;
+  "organize") echo "Soon..."                    ;;
+  "reflect")  echo "Soon..."                    ;;
+  "engage")   gtdEngage                         ;;
+  *)          echo "Wrong syntax. You suck..."  ;;
+esac
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
