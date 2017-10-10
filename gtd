@@ -10,8 +10,9 @@
 
 # [System]
 gtdBannerString="Lowbit Inspector"
-gtdRefreshInterval=60
+gtdRefreshInterval=15
 gtdTaskExec="task rc.verbose=nothing"
+gtdTerminatorString="done"
 # [Capture]
 gtdCaptureTerminatorString="done"
 # [Clarify]
@@ -22,17 +23,17 @@ gtdClarifyNothingString="Nothing to clarify. Be happy. =)"
 # [Organize]
 # [Reflect]
 # [Engage]
-gtdEngageTodayTitle="Vencem Hoje"
+gtdEngageTodayTitle="Today!"
 gtdEngageTodayAmount=5
-gtdEngageOverdueTitle="Atrasadas"
+gtdEngageOverdueTitle="Overdue"
 gtdEngageOverdueAmount=3
-gtdEngageReadyTitle="Próximas Ações"
+gtdEngageReadyTitle="Next Actions"
 gtdEngageReadyAmount=3
-gtdEngageWeekTitle="Para essa Semana"
+gtdEngageWeekTitle="This Week"
 gtdEngageWeekAmount=2
-gtdEngageMonthTitle="Ainda esse Mês"
+gtdEngageMonthTitle="This Month"
 gtdEngageMonthAmount=2
-gtdEngageYearTitle="Até o fim do Ano"
+gtdEngageYearTitle="This Year"
 gtdEngageYearAmount=2
 
 #_______________________Do_not_cross_this_line_(kidding)_______________________#
@@ -52,12 +53,29 @@ function gtdBanner() {
   echo
 }
 
+# Create the contexts used by the tool
+function gtdContextsCreate() {
+  
+  for context in `echo ${gtdClarifyContexts}`; do
+    ${gtdTaskExec} context list | awk {'print $1'} | grep "${context}" > /dev/null
+    gtdContextListRC=$?
+    
+    if [ ${gtdContextListRC} -ne 0 ] ; then
+      gtdBanner "Contexts"
+      echo "=> Setting initial contexts (this must be done just once):"
+      echo
+      ${gtdTaskExec} context define ${context} +${context}
+    fi
+  done
+
+}
+
 # GTD Phase #1 - Capture: Capturing ideas to be processed later
 function gtdCapture() {
   gtdBanner "Capture"
 
   # Cleaning the context before start, so tasks won't get any tags
-  ${gtdTaskExec} context none
+  ${gtdTaskExec} context none 2> /dev/null
 
   # Letting the user input its 'tasks' to the Inbox of Task Warrior
   echo "Type the things you need to capture (when you're done, type '${gtdCaptureTerminatorString}') "
@@ -320,6 +338,41 @@ function gtdClarify() {
 
 }
 
+# GTD Phase #3 - Organize: Checking the Contexts, Projects and Lists
+function gtdOrganize() {
+  gtdBanner "Organize"
+
+  echo "What to Organize?"
+  select usrOrganizeOption in "Contexts" "Projects" "Tags"; do
+    case ${usrOrganizeOption} in
+      "Contexts")
+        ${gtdTaskExec} context list
+        ;;
+
+      "Projects")
+        unset usrOrganizeProject
+
+        ${gtdTaskExec} projects; echo
+
+        echo "Type the name of a Project to organize it (when you're done, type '${gtdTerminatorString}') "
+        while [ "${usrOrganizeProject}" != "${gtdTerminatorString}" ]; do
+          read -p "Project: " usrOrganizeProject
+        done
+        ;;
+
+      "Tags")
+        ${gtdTaskExec} tags
+        ;;
+    esac
+  done
+
+}
+
+# GTD Phase #4 - Reflect: Cleaning up and Reviewing the system
+function gtdReflect() {
+  true
+}
+
 # GTD Phase #5 - Engage: Getting Things Done
 function gtdEngage() {
 
@@ -356,6 +409,7 @@ function gtdQuery() {
 
 if [ $1 ]; then
   usrAction=$1
+  gtdContextsCreate
 else
   echo "Syntax:"
   echo "  `basename $0` OPTION"
@@ -372,8 +426,8 @@ fi
 case $usrAction in
   "capture")  gtdCapture                        ;;
   "clarify")  gtdClarify                        ;;
-  "organize") echo "Soon..."                    ;;
-  "reflect")  echo "Soon..."                    ;;
+  "organize") gtdOrganize                       ;;
+  "reflect")  gtdReflect                        ;;
   "engage")   gtdEngage                         ;;
   *)          echo "Wrong syntax. You suck..."  ;;
 esac
