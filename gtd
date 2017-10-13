@@ -102,6 +102,9 @@ function gtdCapture() {
 # GTD Phase #2 - Clarify: Understanding the ideas previously captured
 function gtdClarify() {
 
+  # Cleaning the context before start
+  ${gtdTaskExec} context none 2> /dev/null
+
   gtdClarifyContexts="${gtdContexts} continue"
 
   while [ `${gtdTaskExec} status:pending project: wait: count` -gt 0 ]; do
@@ -307,7 +310,7 @@ function gtdClarify() {
             echo "Which lists? (once at time - when you're done, type '${gtdTerminatorString}')"
             read -p "List: " usrClarifySomedayList
             case "${usrClarifySomedayList}" in
-              "${gtdTermiatorString}")
+              "${gtdTerminatorString}")
                 break
                 ;;
               *)
