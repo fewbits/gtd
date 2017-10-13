@@ -10,31 +10,32 @@
 
 # [System]
 gtdBannerString="Lowbit Inspector"
-gtdRefreshInterval=15
+gtdAreas="Business Career Family Finances Health Hobbies Love Social Spiritual Work"
+gtdContexts="home business work guarulhos"
+gtdRefreshInterval=30
 gtdTaskExec="task rc.verbose=nothing"
 gtdTerminatorString="done"
 # [Capture]
-gtdCaptureTerminatorString="done"
+#
 # [Clarify]
-gtdClarifyContexts="home business work"
-gtdClarifyCategories="Business Career Family Finances Health Hobbies Love Social Spiritual Work"
-gtdClarifySomedayListTerminator="done"
 gtdClarifyNothingString="Nothing to clarify. Be happy. =)"
 # [Organize]
+#
 # [Reflect]
+#
 # [Engage]
 gtdEngageTodayTitle="Today!"
 gtdEngageTodayAmount=5
 gtdEngageOverdueTitle="Overdue"
 gtdEngageOverdueAmount=3
 gtdEngageReadyTitle="Next Actions"
-gtdEngageReadyAmount=3
+gtdEngageReadyAmount=5
 gtdEngageWeekTitle="This Week"
-gtdEngageWeekAmount=2
+gtdEngageWeekAmount=3
 gtdEngageMonthTitle="This Month"
 gtdEngageMonthAmount=2
 gtdEngageYearTitle="This Year"
-gtdEngageYearAmount=2
+gtdEngageYearAmount=1
 
 #_______________________Do_not_cross_this_line_(kidding)_______________________#
 
@@ -48,7 +49,7 @@ function gtdBanner() {
 
   clear
   echo "--------------------------------------------------------------------------------"
-  echo " You are in ${gtdBannerString} | '${gtdMode}' mode"
+  echo " You are in ${gtdBannerString} | ${gtdMode}"
   echo "--------------------------------------------------------------------------------"
   echo
 }
@@ -56,7 +57,7 @@ function gtdBanner() {
 # Create the contexts used by the tool
 function gtdContextsCreate() {
   
-  for context in `echo ${gtdClarifyContexts}`; do
+  for context in `echo ${gtdContexts}`; do
     ${gtdTaskExec} context list | awk {'print $1'} | grep "${context}" > /dev/null
     gtdContextListRC=$?
     
@@ -78,16 +79,16 @@ function gtdCapture() {
   ${gtdTaskExec} context none 2> /dev/null
 
   # Letting the user input its 'tasks' to the Inbox of Task Warrior
-  echo "Type the things you need to capture (when you're done, type '${gtdCaptureTerminatorString}') "
-  while [ "${usrCaptureString}" != "${gtdCaptureTerminatorString}" ]; do
+  echo "Type the things you need to capture (when you're done, type '${gtdTerminatorString}') "
+  while [ "${usrCaptureString}" != "${gtdTerminatorString}" ]; do
 
     read -p "Capture: " usrCaptureString
 
     case "${usrCaptureString}" in
       "")
-        echo "Nothing? If you're done, type '${gtdCaptureTerminatorString}'"
+        echo "Nothing? If you're done, type '${gtdTerminatorString}'"
         ;;
-      "${gtdCaptureTerminatorString}")
+      "${gtdTerminatorString}")
         break
         ;;
       *)
@@ -101,7 +102,7 @@ function gtdCapture() {
 # GTD Phase #2 - Clarify: Understanding the ideas previously captured
 function gtdClarify() {
 
-  gtdClarifyContextsAll="${gtdClarifyContexts} continue"
+  gtdClarifyContexts="${gtdContexts} continue"
 
   while [ `${gtdTaskExec} status:pending project: wait: count` -gt 0 ]; do
 
@@ -118,12 +119,12 @@ function gtdClarify() {
     
     # Questions
     echo "Options:"
-    select usrClarifyAction in "Action" "Someday" "Goal" "Habit" "Done" "Trash"; do
+    select usrClarifyAction in "Action" "Someday" "Goal" "Habit" "Done" "Trash" "Quit"; do
       case "${usrClarifyAction}" in
         "Action")
 
-          echo "Which Category?"
-          select usrClarifyCategory in ${gtdClarifyCategories}; do
+          echo "Which Area?"
+          select usrClarifyCategory in ${gtdAreas}; do
             task ${gtdClarifyNext} modify project:"${usrClarifyCategory}"
             break
           done
@@ -150,7 +151,7 @@ function gtdClarify() {
             esac
           done
 
-          echo "Do you need to rename it?"
+          echo "What is the next Action? Do you need to rename it?"
           select usrClarifyRenameBool in "Yes" "No"; do
             case ${usrClarifyRenameBool} in
               "Yes")
@@ -169,7 +170,7 @@ function gtdClarify() {
           done
 
           echo "Which are the contexts? (select once at a time, then select 'continue')"
-          select usrClarifyContext in ${gtdClarifyContextsAll}; do
+          select usrClarifyContext in ${gtdClarifyContexts}; do
             case "${usrClarifyContext}" in
               "continue")
                 break
@@ -295,36 +296,50 @@ function gtdClarify() {
           break
 
           ;;
+
         "Someday")
           task ${gtdClarifyNext} modify project:Someday
           task tags          
 
           unset usrClarifySomedayList
 
-          while [ "${usrClarifySomedayList}" != "${gtdClarifySomedayListTerminator}" ]; do
-            echo "Which lists? (once at time - when you're done, type '${gtdClarifySomedayListTerminator}')"
+          while [ "${usrClarifySomedayList}" != "${gtdTerminatorString}" ]; do
+            echo "Which lists? (once at time - when you're done, type '${gtdTerminatorString}')"
             read -p "List: " usrClarifySomedayList
-            if [ -n "${usrClarifySomedayList}" ]; then
-              task ${gtdClarifyNext} modify +"${usrClarifySomedayList}"
-            fi
+            case "${usrClarifySomedayList}" in
+              "${gtdTermiatorString}")
+                break
+                ;;
+              *)
+                task ${gtdClarifyNext} modify +"${usrClarifySomedayList}"
+                ;;
+            esac
           done
 
           break
 
           ;;
+
         "Goal")
           echo "Soon..."
           ;;
+
         "Habit")
           echo "Soon..."
           ;;
+
         "Done")
           task ${gtdClarifyNext} done
           break
           ;;
+
         "Trash")
           task ${gtdClarifyNext} delete
           break
+          ;;
+
+        "Quit")
+          exit
           ;;
       esac
     done
@@ -342,27 +357,66 @@ function gtdClarify() {
 function gtdOrganize() {
   gtdBanner "Organize"
 
-  echo "What to Organize?"
-  select usrOrganizeOption in "Contexts" "Projects" "Tags"; do
+  echo "Organize your System:"
+  select usrOrganizeOption in "Contexts" "Projects" "Lists" "Calendar" "Quit"; do
     case ${usrOrganizeOption} in
       "Contexts")
-        ${gtdTaskExec} context list
+        echo
+        echo "Your contexts are:"
+        task context list
         ;;
 
       "Projects")
         unset usrOrganizeProject
+        echo "Projects:"
+        select usrOrganizeProjectsMode in "All" "Summary" "Back"; do
+          case ${usrOrganizeProjectsMode} in
 
-        ${gtdTaskExec} projects; echo
+            "All")            
+              task summary            
+              ;;
 
-        echo "Type the name of a Project to organize it (when you're done, type '${gtdTerminatorString}') "
-        while [ "${usrOrganizeProject}" != "${gtdTerminatorString}" ]; do
-          read -p "Project: " usrOrganizeProject
+            "Summary")
+              
+              echo
+              echo "Projects by Area:"
+              echo
+            
+              for area in `echo $gtdAreas`; do
+                areaOutput=`${gtdTaskExec} projects project:"${area}". | tail -n1`
+                echo "${areaOutput}" | grep "No project" > /dev/null 2>&1
+                areaOutputRC=$?
+                if [ ${areaOutputRC} -ne 0 ]; then
+                  areaProjectsTotal=`echo "${areaOutput}" | cut -d' ' -f1`
+                  areaProjectsReal=`echo "${areaProjectsTotal}-1" | bc`
+                  echo "${area}: ${areaProjectsReal}"
+                else
+                  echo "${area}: --"
+                fi
+              done
+              ;;
+              
+            "Back")
+              break
+              ;;
+
+          esac
         done
+
         ;;
 
-      "Tags")
+      "Lists")
         ${gtdTaskExec} tags
         ;;
+
+      "Calendar")
+        ${gtdTaskExec} calendar
+        ;;
+
+      "Quit")
+        break
+        ;;
+
     esac
   done
 
@@ -376,8 +430,16 @@ function gtdReflect() {
 # GTD Phase #5 - Engage: Getting Things Done
 function gtdEngage() {
 
+  gtdBanner "Engage - Context: ???"
+  
+  echo "What are your current context?"
+  select usrEngageContext in ${gtdContexts}; do
+    ${gtdTaskExec} context "${usrEngageContext}"
+    break
+  done
+
   while [ true ]; do
-    gtdBanner "Engage"
+    gtdBanner "Engage - Context: ${usrEngageContext}"
     gtdQuery "${gtdEngageTodayTitle}" "next +TODAY" "${gtdEngageTodayAmount}"
     gtdQuery "${gtdEngageOverdueTitle}" "overdue" "${gtdEngageOverdueAmount}"
     gtdQuery "${gtdEngageReadyTitle}" "ready" "${gtdEngageReadyAmount}"
@@ -415,11 +477,11 @@ else
   echo "  `basename $0` OPTION"
   echo
   echo "Options:"
-  echo "  capture"
-  echo "  clarify"
-  echo "  organize"
-  echo "  reflect"
-  echo "  engage"
+  echo "  capture   - Collect ideas (everytime something pops up in your mind)"
+  echo "  clarify   - Understand ideas (every 1 or 2 days)"
+  echo "  organize  - Check your system (when you feel like things are messy)"
+  echo "  reflect   - Update your system (once a week - review your lists)"
+  echo "  engage    - Get Things Done! (everyday - the major portion of time)"
   exit 1
 fi
 
