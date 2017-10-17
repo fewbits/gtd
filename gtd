@@ -433,9 +433,9 @@ function gtdReflect() {
 # GTD Phase #5 - Engage: Getting Things Done
 function gtdEngage() {
 
-  gtdBanner "Engage - Context: ???"
+  gtdBanner "Engage - Context: <SELECT>"
   
-  echo "What are your current context?"
+  echo "What are your current Context?"
   select usrEngageContext in ${gtdContexts}; do
     ${gtdTaskExec} context "${usrEngageContext}"
     break
@@ -446,9 +446,9 @@ function gtdEngage() {
     gtdQuery "${gtdEngageTodayTitle}" "next +TODAY" "${gtdEngageTodayAmount}"
     gtdQuery "${gtdEngageOverdueTitle}" "overdue" "${gtdEngageOverdueAmount}"
     gtdQuery "${gtdEngageReadyTitle}" "ready" "${gtdEngageReadyAmount}"
-    gtdQuery "${gtdEngageWeekTitle}" "next +WEEK" "${gtdEngageWeekAmount}"
-    gtdQuery "${gtdEngageMonthTitle}" "next +MONTH" "${gtdEngageMonthAmount}"
-    gtdQuery "${gtdEngageYearTitle}" "next +YEAR" "${gtdEngageYearAmount}"
+    gtdQuery "${gtdEngageWeekTitle}" "next +WEEK -DUETODAY -OVERDUE" "${gtdEngageWeekAmount}"
+    gtdQuery "${gtdEngageMonthTitle}" "next +MONTH -WEEK -DUETODAY -OVERDUE" "${gtdEngageMonthAmount}"
+    gtdQuery "${gtdEngageYearTitle}" "next +YEAR -MONTH -WEEK -DUETODAY -OVERDUE" "${gtdEngageYearAmount}"
 
     sleep ${gtdRefreshInterval}
   done
