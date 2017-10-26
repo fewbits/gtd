@@ -445,7 +445,7 @@ function gtdEngage() {
     ${gtdTaskExec} context "${usrEngageContext}"
     gtdBanner "Engage - Context: ${usrEngageContext}"
     gtdQuery "${gtdEngageTodayTitle}" "next +TODAY" "${gtdEngageTodayAmount}"
-    gtdQuery "${gtdEngageOverdueTitle}" "overdue" "${gtdEngageOverdueAmount}"
+    gtdQuery "${gtdEngageOverdueTitle}" "next +OVERDUE" "${gtdEngageOverdueAmount}"
     gtdQuery "${gtdEngageReadyTitle}" "ready" "${gtdEngageReadyAmount}"
     gtdQuery "${gtdEngageWeekTitle}" "next +WEEK -DUETODAY -OVERDUE" "${gtdEngageWeekAmount}"
     gtdQuery "${gtdEngageMonthTitle}" "next +MONTH -WEEK -DUETODAY -OVERDUE" "${gtdEngageMonthAmount}"
