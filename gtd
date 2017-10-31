@@ -436,7 +436,7 @@ function gtdEngage() {
 
   gtdBanner "Engage - Context: <SELECT>"
   
-  echo "What are your current Context?"
+  echo "Which is your current Context?"
   select usrEngageContext in ${gtdContexts}; do
     ${gtdTaskExec} context "${usrEngageContext}"
     break
