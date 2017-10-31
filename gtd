@@ -445,8 +445,8 @@ function gtdEngage() {
   while [ true ]; do
     ${gtdTaskExec} context "${usrEngageContext}"
     gtdBanner "Engage - Context: ${usrEngageContext}"
-    gtdQuery "${gtdEngageOverdueTitle}" "next +OVERDUE" "${gtdEngageOverdueAmount}"
     gtdQuery "${gtdEngageTodayTitle}" "next +TODAY" "${gtdEngageTodayAmount}"
+    gtdQuery "${gtdEngageOverdueTitle}" "next +OVERDUE" "${gtdEngageOverdueAmount}"
     gtdQuery "${gtdEngageReadyTitle}" "ready" "${gtdEngageReadyAmount}"
     gtdQuery "${gtdEngageTomorrowTitle}" "next +TOMORROW -CHILD" "${gtdEngageTomorrowAmount}"
     gtdQuery "${gtdEngageWeekTitle}" "next +WEEK -CHILD -OVERDUE" "${gtdEngageWeekAmount}"
