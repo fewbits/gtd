@@ -24,12 +24,14 @@ gtdClarifyNothingString="Nothing to clarify. Be happy. =)"
 # [Reflect]
 #
 # [Engage]
+gtdEngageOverdueTitle="Overdue"
+gtdEngageOverdueAmount=5
 gtdEngageTodayTitle="Today!"
 gtdEngageTodayAmount=5
-gtdEngageOverdueTitle="Overdue"
-gtdEngageOverdueAmount=3
 gtdEngageReadyTitle="Next Actions"
 gtdEngageReadyAmount=5
+gtdEngageTomorrowTitle="Tomorrow"
+gtdEngageTomorrowAmount=4
 gtdEngageWeekTitle="This Week"
 gtdEngageWeekAmount=3
 gtdEngageMonthTitle="This Month"
@@ -264,7 +266,6 @@ function gtdClarify() {
                 break
                 ;;
               "No")
-                task ${gtdClarifyNext} modify due:
                 break
                 ;;
             esac
@@ -444,12 +445,13 @@ function gtdEngage() {
   while [ true ]; do
     ${gtdTaskExec} context "${usrEngageContext}"
     gtdBanner "Engage - Context: ${usrEngageContext}"
-    gtdQuery "${gtdEngageTodayTitle}" "next +TODAY" "${gtdEngageTodayAmount}"
     gtdQuery "${gtdEngageOverdueTitle}" "next +OVERDUE" "${gtdEngageOverdueAmount}"
+    gtdQuery "${gtdEngageTodayTitle}" "next +TODAY" "${gtdEngageTodayAmount}"
     gtdQuery "${gtdEngageReadyTitle}" "ready" "${gtdEngageReadyAmount}"
-    gtdQuery "${gtdEngageWeekTitle}" "next +WEEK -DUETODAY -OVERDUE" "${gtdEngageWeekAmount}"
-    gtdQuery "${gtdEngageMonthTitle}" "next +MONTH -WEEK -DUETODAY -OVERDUE" "${gtdEngageMonthAmount}"
-    gtdQuery "${gtdEngageYearTitle}" "next +YEAR -MONTH -WEEK -DUETODAY -OVERDUE" "${gtdEngageYearAmount}"
+    gtdQuery "${gtdEngageTomorrowTitle}" "next +TOMORROW -CHILD" "${gtdEngageTomorrowAmount}"
+    gtdQuery "${gtdEngageWeekTitle}" "next +WEEK -CHILD -OVERDUE" "${gtdEngageWeekAmount}"
+    gtdQuery "${gtdEngageMonthTitle}" "next +MONTH -CHILD -OVERDUE" "${gtdEngageMonthAmount}"
+    gtdQuery "${gtdEngageYearTitle}" "next +YEAR -CHILD -OVERDUE" "${gtdEngageYearAmount}"
 
     sleep ${gtdRefreshInterval}
   done
