@@ -445,13 +445,15 @@ function gtdEngage() {
   while [ true ]; do
     ${gtdTaskExec} context "${usrEngageContext}"
     gtdBanner "Engage - Context: ${usrEngageContext}"
+    gtdQuery "${gtdEngageOverdueTitle}" "ready -YESTERDAY +OVERDUE" "${gtdEngageOverdueAmount}"
+    gtdQuery "${gtdEngageYesterdayTitle}" "ready +YESTERDAY" "${gtdEngageYesterdayAmount}"
     gtdQuery "${gtdEngageTodayTitle}" "ready +TODAY" "${gtdEngageTodayAmount}"
-    gtdQuery "${gtdEngageOverdueTitle}" "ready +OVERDUE" "${gtdEngageOverdueAmount}"
+    gtdQuery "${gtdEngageTomorrowTitle}" "ready +TOMORROW" "${gtdEngageTomorrowAmount}"
+    gtdQuery "${gtdEngageWeekTitle}" "ready +WEEK -OVERDUE" "${gtdEngageWeekAmount}"
+    gtdQuery "${gtdEngageDueTitle}" "ready +WEEK -OVERDUE" "${gtdEngageDueAmount}"
+    gtdQuery "${gtdEngageMonthTitle}" "ready +MONTH -OVERDUE" "${gtdEngageMonthAmount}"
+    gtdQuery "${gtdEngageYearTitle}" "ready +YEAR -OVERDUE" "${gtdEngageYearAmount}"
     gtdQuery "${gtdEngageReadyTitle}" "ready" "${gtdEngageReadyAmount}"
-    gtdQuery "${gtdEngageTomorrowTitle}" "ready +TOMORROW -CHILD" "${gtdEngageTomorrowAmount}"
-    gtdQuery "${gtdEngageWeekTitle}" "ready +WEEK -CHILD -OVERDUE" "${gtdEngageWeekAmount}"
-    gtdQuery "${gtdEngageMonthTitle}" "ready +MONTH -CHILD -OVERDUE" "${gtdEngageMonthAmount}"
-    gtdQuery "${gtdEngageYearTitle}" "ready +YEAR -CHILD -OVERDUE" "${gtdEngageYearAmount}"
 
     sleep ${gtdRefreshInterval}
   done
