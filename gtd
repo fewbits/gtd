@@ -24,20 +24,24 @@ gtdClarifyNothingString="Nothing to clarify. Be happy. =)"
 # [Reflect]
 #
 # [Engage]
-gtdEngageOverdueTitle="Overdue"
-gtdEngageOverdueAmount=5
+gtdEngageOverdueTitle="This is very late"
+gtdEngageOverdueAmount=2
+gtdEngageYesterdayTitle="Yesterday"
+gtdEngageYesterdayAmount=2
 gtdEngageTodayTitle="Today!"
-gtdEngageTodayAmount=5
-gtdEngageReadyTitle="Next Actions"
-gtdEngageReadyAmount=5
+gtdEngageTodayAmount=2
 gtdEngageTomorrowTitle="Tomorrow"
-gtdEngageTomorrowAmount=4
+gtdEngageTomorrowAmount=2
 gtdEngageWeekTitle="This Week"
-gtdEngageWeekAmount=3
+gtdEngageWeekAmount=2
+gtdEngageDueTitle="7 Days"
+gtdEngageDueAmount=2
 gtdEngageMonthTitle="This Month"
 gtdEngageMonthAmount=2
 gtdEngageYearTitle="This Year"
-gtdEngageYearAmount=1
+gtdEngageYearAmount=2
+gtdEngageReadyTitle="Next Actions"
+gtdEngageReadyAmount=2
 
 #_______________________Do_not_cross_this_line_(kidding)_______________________#
 
@@ -449,10 +453,10 @@ function gtdEngage() {
     gtdQuery "${gtdEngageYesterdayTitle}" "ready +YESTERDAY" "${gtdEngageYesterdayAmount}"
     gtdQuery "${gtdEngageTodayTitle}" "ready +TODAY" "${gtdEngageTodayAmount}"
     gtdQuery "${gtdEngageTomorrowTitle}" "ready +TOMORROW" "${gtdEngageTomorrowAmount}"
-    gtdQuery "${gtdEngageWeekTitle}" "ready +WEEK -OVERDUE" "${gtdEngageWeekAmount}"
-    gtdQuery "${gtdEngageDueTitle}" "ready +WEEK -OVERDUE" "${gtdEngageDueAmount}"
-    gtdQuery "${gtdEngageMonthTitle}" "ready +MONTH -OVERDUE" "${gtdEngageMonthAmount}"
-    gtdQuery "${gtdEngageYearTitle}" "ready +YEAR -OVERDUE" "${gtdEngageYearAmount}"
+    gtdQuery "${gtdEngageWeekTitle}" "ready -OVERDUE +WEEK" "${gtdEngageWeekAmount}"
+    gtdQuery "${gtdEngageDueTitle}" "ready -OVERDUE -WEEK +DUE" "${gtdEngageDueAmount}"
+    gtdQuery "${gtdEngageMonthTitle}" "ready -OVERDUE -WEEK -DUE +MONTH" "${gtdEngageMonthAmount}"
+    gtdQuery "${gtdEngageYearTitle}" "ready -OVERDUE -WEEK -DUE -MONTH +YEAR" "${gtdEngageYearAmount}"
     gtdQuery "${gtdEngageReadyTitle}" "ready" "${gtdEngageReadyAmount}"
 
     sleep ${gtdRefreshInterval}
