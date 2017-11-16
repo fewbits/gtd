@@ -465,13 +465,8 @@ function gtdEngage() {
 
 # GTD Extras - Engage Focus Mode
 function gtdEngageFocus() {
-
-  while [ true ]; do
-    ${gtdTaskExec} context none
-    gtdBanner "Engage - Focus Mode"
-    gtdQuery "Your Next Task is..." "next" "1"
-    sleep ${gtdRefreshInterval}
-  done
+  ${gtdTaskExec} context none 2>/dev/null
+  gtdQuery "Your Next Task is..." "next" "1"
 }
 
 
@@ -510,13 +505,13 @@ else
 fi
 
 case $usrAction in
-  "capture")      gtdCapture                        ;;
-  "clarify")      gtdClarify                        ;;
-  "organize")     gtdOrganize                       ;;
-  "reflect")      gtdReflect                        ;;
-  "engage")       gtdEngage                         ;;
-  "engage-focus") gtdEngageFocus                    ;;
-  *)              echo "Wrong syntax. Sorry..."     ;;
+  "capture")  gtdCapture                    ;;
+  "clarify")  gtdClarify                    ;;
+  "organize") gtdOrganize                   ;;
+  "reflect")  gtdReflect                    ;;
+  "engage")   gtdEngage                     ;;
+  "focus")    gtdEngageFocus                ;;
+  *)          echo "Wrong syntax. Sorry..." ;;
 esac
 
 
